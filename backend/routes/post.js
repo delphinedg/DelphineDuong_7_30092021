@@ -7,6 +7,6 @@ router.get("/", postCtrl.getAllPosts);
 router.post("/", postCtrl.createPost);
 router.put("/:id", postCtrl.updateOnePost);
 router.delete("/:id", postCtrl.deleteOnePost);
-router.get("/:id_user", postCtrl.getAllPostsOfUser);
+router.get("/:idUser", postCtrl.getAllPostsOfUser);
 
 module.exports = router;

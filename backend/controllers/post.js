@@ -12,27 +12,27 @@ exports.getAllPosts = (req, res, next) => {
 };
 
 exports.createPost = (req, res, next) => {
-  const id_user = req.body.id_user;
-  const text_post = req.body.text_post;
-  const image_url = req.body.image_url;
+  const idUser = req.body.idUser;
+  const textPost = req.body.textPost;
+  const imageUrl = req.body.imageUrl;
   db.promise()
     .query("INSERT INTO posts VALUES (NULL, ?, NULL, ?, ?)", [
-      id_user,
-      text_post,
-      image_url,
+      idUser,
+      textPost,
+      imageUrl,
     ])
     .then(() => res.status(201).json({ message: "Publication créée" }))
     .catch((error) => res.status(400).json({ error }));
 };
 
 exports.updateOnePost = (req, res, next) => {
-  const text_post = req.body.text_post;
-  const image_url = req.body.image_url;
+  const textPost = req.body.textPost;
+  const imageUrl = req.body.imageUrl;
   const id = req.params.id;
   db.promise()
     .query("UPDATE posts SET text_post = ?, image_url = ? WHERE id = ?", [
-      text_post,
-      image_url,
+      textPost,
+      imageUrl,
       id,
     ])
     .then(() => res.status(201).json({ message: "Publication modifiée" }))
@@ -49,11 +49,11 @@ exports.deleteOnePost = (req, res, next) => {
 
 // A REVOIR
 exports.getAllPostsOfUser = (req, res, next) => {
-  const id_user = req.body.id_user;
+  const idUser = req.body.idUser;
   db.promise()
     .query(
       "SELECT * FROM posts JOIN users ON posts.id_user = users.id WHERE users.id = ?",
-      [id_user]
+      [idUser]
     )
     .then(([posts]) => {
       res.status(200).json(posts);

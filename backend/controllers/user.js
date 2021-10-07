@@ -9,12 +9,12 @@ exports.signup = (req, res, next) => {
     .then((hash) => {
       const email = req.body.email;
       const password = hash;
-      const first_name = req.body.first_name;
-      const last_name = req.body.last_name;
+      const firstName = req.body.firstName;
+      const lastName = req.body.lastName;
       db.promise()
         .query("INSERT INTO users VALUES (NULL, ?, ?, ?, ?, 0)", [
-          first_name,
-          last_name,
+          firstName,
+          lastName,
           email,
           password,
         ])
