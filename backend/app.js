@@ -1,11 +1,12 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const db = require("./config/config-db");
-//const path = require("path");
+const path = require("path");
 
-// Constantes ROUTES
+const auth = require("./middleware/auth");
 const userRoutes = require("./routes/user");
 const postRoutes = require("./routes/post");
+const commentRoutes = require("./routes/comment");
 
 const app = express();
 
@@ -31,9 +32,10 @@ app.use(
   })
 );
 
-//app.use("/images", express.static(path.join(__dirname, "images")));
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use("/api/auth", userRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/comments", commentRoutes);
 
 module.exports = app;

@@ -12,12 +12,10 @@ exports.signup = (req, res, next) => {
       const firstName = req.body.firstName;
       const lastName = req.body.lastName;
       db.promise()
-        .query("INSERT INTO users VALUES (NULL, ?, ?, ?, ?, 0)", [
-          firstName,
-          lastName,
-          email,
-          password,
-        ])
+        .query(
+          "INSERT INTO users(id, first_name, last_name, email, password) VALUES (NULL, ?, ?, ?, ?)",
+          [firstName, lastName, email, password]
+        )
         .then(() => res.status(201).json({ message: "Utilisateur créé" }))
         .catch((error) => res.status(400).json({ error }));
     })
@@ -54,8 +52,19 @@ exports.login = (req, res, next) => {
 exports.getOneUser = (req, res, next) => {
   const id = req.params.id;
   db.promise()
-    .query("SELECT * FROM users WHERE id = ?", [id])
+    .query("SELECT * FROM users WHERE users.id = ?", [id])
     .then(([user]) => res.status(200).json(user))
+    .catch((error) => res.status(404).json({ error }));
+};
+
+exports.getOneUserPosts = (req, res, next) => {
+  const id = req.params.id;
+  db.promise()
+    .query(
+      "SELECT u.first_name AS postAuthorFirstName, u.last_name AS postAuthorLastName, p.date_post AS datePost, p.text_post AS textPost, p.image_url AS imageUrl, c.date_comment AS dateComment, c.text_comment AS textComment, u2.first_name AS commentAuthorFirstName, u2.last_name AS commentAuthorLastName FROM users u JOIN posts p ON u.id = p.id_user LEFT JOIN comments c ON c.id_post = p.id LEFT JOIN users u2 ON c.id_user_comment = u2.id WHERE u.id = ? ORDER BY date_post DESC, date_comment",
+      [id]
+    )
+    .then(([userPosts]) => res.status(200).json(userPosts))
     .catch((error) => res.status(404).json({ error }));
 };
 
