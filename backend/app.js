@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const db = require("./config/config-db");
+const helmet = require("helmet");
 const path = require("path");
 
 const auth = require("./middleware/auth");
@@ -9,6 +10,8 @@ const postRoutes = require("./routes/post");
 const commentRoutes = require("./routes/comment");
 
 const app = express();
+
+app.use(helmet());
 
 // Headers
 app.use((req, res, next) => {
