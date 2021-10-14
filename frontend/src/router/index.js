@@ -1,7 +1,6 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import Home from "../views/Home.vue";
-import NotFound from "../views/NotFound.vue";
+import Login from "../views/Login.vue";
 
 Vue.use(VueRouter);
 
@@ -9,16 +8,16 @@ const routes = [
   {
     path: "/",
     name: "Login",
-    component: Home,
+    component: Login,
     meta: {
-      title: "Accueil",
+      title: "Groupomania - Connexion ou inscription",
     },
   },
   {
     path: "/posts",
     name: "Posts",
     meta: {
-      title: "Posts",
+      title: "Groupomania - Publications",
     },
     // route level code-splitting
     // this generates a separate chunk (posts.[hash].js) for this route
@@ -27,10 +26,10 @@ const routes = [
       import(/* webpackChunkName: "posts" */ "../views/Posts.vue"),
   },
   {
-    path: "/profile",
+    path: "/profile/:id",
     name: "Profile",
     meta: {
-      title: "Profile",
+      title: "Grouponamia - Utilisateur",
     },
     component: () =>
       import(/* webpackChunkName: "profile" */ "../views/Profile.vue"),
@@ -38,7 +37,8 @@ const routes = [
   {
     path: "*",
     name: "NotFound",
-    component: NotFound,
+    component: () =>
+      import(/* webpackChunkName: "NotFound" */ "../views/NotFound.vue"),
     meta: {
       title: "404 Not Found",
     },
