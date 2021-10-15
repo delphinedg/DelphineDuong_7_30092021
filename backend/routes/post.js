@@ -8,5 +8,6 @@ router.get("/", postCtrl.getAllPosts);
 router.post("/", postCtrl.createPost);
 router.put("/:id", postCtrl.updateOnePost);
 router.delete("/:id", postCtrl.deleteOnePost);
+router.get("/:id/comments", postCtrl.getAllCommentsOfAPost);
 
 module.exports = router;

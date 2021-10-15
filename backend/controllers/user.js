@@ -61,7 +61,7 @@ exports.getOneUserPosts = (req, res, next) => {
   const id = req.params.id;
   db.promise()
     .query(
-      "SELECT u.first_name AS postAuthorFirstName, u.last_name AS postAuthorLastName, p.date_post AS datePost, p.text_post AS textPost, p.image_url AS imageUrl, c.date_comment AS dateComment, c.text_comment AS textComment, u2.first_name AS commentAuthorFirstName, u2.last_name AS commentAuthorLastName FROM users u JOIN posts p ON u.id = p.id_user LEFT JOIN comments c ON c.id_post = p.id LEFT JOIN users u2 ON c.id_user_comment = u2.id WHERE u.id = ? ORDER BY date_post DESC, date_comment",
+      "SELECT * FROM users u JOIN posts p ON u.id = p.id_user WHERE u.id = ? ORDER BY date_post DESC",
       [id]
     )
     .then(([userPosts]) => res.status(200).json(userPosts))
