@@ -5,7 +5,7 @@
         </div>
         <div id="nav__link">
             <router-link to="/posts">Fil d'actualité</router-link> |
-            <router-link :to="{ name: 'Profile', params: { id: 123}}">Profil</router-link> |
+            <router-link :to="{ name: 'Profile', params: { id: user.userId }}">Mon compte</router-link> |
             <button @click="logout()">Déconnexion</button>
         </div>
     </div>
@@ -14,7 +14,14 @@
 <script>
 export default {
   name: 'Nav',
+  computed: {
+    // On récupère le user dans le store afin de mettre l'userId dans l'URL.
+    user() {
+      return this.$store.state.user;
+    },
+  },
   methods: {
+      // Quand on clique sur le bouton déconnecter, on fait appel à la mutation logout du store et on retourne vers la page de connexion (/).
       logout: function() {
           this.$store.commit('logout');
           this.$router.push('/');

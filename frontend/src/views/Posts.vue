@@ -14,7 +14,7 @@
         <div class="card-post">
           <p class="card-post__name"><a href="#">Prénom Nom</a></p>
           <p class="card-post__date">Date</p>
-          <p class="card-post__content">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. </p>
+          <p class="card-post__content">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
           <div class="card-post__image"><img src="../assets/welcome.jpg"/></div>
         </div>
         <div class="btn-post">
@@ -26,6 +26,10 @@
           <p class="card-comment__name"><a href="#">Nom prénom</a></p>
           <p class="card-comment__date">Date</p>
           <p class="card-comment__content">Texte du commentaire ici</p>
+          <div class="btn-post">
+            <button class="btn-post__update">Modifier</button>
+            <button class="btn-post__delete">Supprimer</button>
+          </div>
         </div>
         <div class="add-comments">
           <textarea id="write-comment" cols="100" rows="1" placeholder="Ecrivez un commentaire..."></textarea>

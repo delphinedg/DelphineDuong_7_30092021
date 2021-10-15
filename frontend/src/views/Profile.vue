@@ -7,29 +7,34 @@
         <div class="profile-card__image">
           <img src="../assets/profile-img.png" alt="avatar utilisateur"/>
         </div>
-        <h1 class="profile-card__name">Nom prénom</h1>
-        <p class="profile-card__email">Email</p>
-        <button class="btn btn--post">Supprimer mon compte</button>
+        <h1 class="profile-card__name">{{ userProfile.first_name }} {{ userProfile.last_name }}</h1>
+        <p class="profile-card__email">{{ userProfile.email }}</p>
+        <button class="btn btn--post" @click="deleteAccount()" v-if="isUserOrAdmin">Supprimer mon compte</button>
       </div>
     </div>
-    <div class="all-posts">
+    <div class="all-posts" :key="index" v-for="(post, index) in userPosts">
       <div class="card">
         <div class="card-post">
-          <p class="card-post__name"><a href="#">Prénom Nom</a></p>
-          <p class="card-post__date">Date</p>
-          <p class="card-post__content">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
-          <div class="card-post__image"><img src="../assets/welcome.jpg"/></div>
+          <p class="card-post__name"><router-link :to="{ name: 'Profile', params: { id: post.id_user }}">{{ post.first_name }} {{ post.last_name }}</router-link></p>
+          <p class="card-post__date">{{ post.date_post }}</p>
+          <p class="card-post__content" v-if='post.text_post !=""'>{{ post.text_post }}</p>
+          <div class="card-post__image" v-if='post.image_url !=""'><img :src="post.image_url"/></div>
+        </div>
+        <div class="btn-post">
+          <button class="btn-post__update" @click="updatePost()" v-if="isPostAuthorOrAdmin(post)">Modifier</button>
+          <button class="btn-post__delete" @click="deletePost(post.id)" v-if="isPostAuthorOrAdmin(post)">Supprimer</button>
         </div>
         <hr>
-        <div class="card-comment">
-          <p class="card-comment__name"><a href="#">Nom prénom</a></p>
-          <p class="card-comment__date">Date</p>
-          <p class="card-comment__content">Texte du commentaire ici</p>
-        </div>
-        <div class="add-comments">
-          <textarea id="write-comment" cols="100" rows="1" placeholder="Ecrivez un commentaire..."></textarea>
-          <button class="btn btn--outlined btn--post">Commenter</button>
-        </div>
+          <div class="card-comment" :key="i" v-for="(comment, i) in post.comments">
+            <p class="card-comment__name"><a href="#">{{ comment.first_name }} {{ comment.last_name }}</a></p>
+            <p class="card-comment__date">{{ comment.date_comment }}</p>
+            <p class="card-comment__content">{{ comment.text_comment }}</p>
+            <div class="btn-post">
+              <button class="btn-post__update" v-if="isCommentAuthorOrAdmin(comment)">Modifier</button>
+              <button class="btn-post__delete" v-if="isCommentAuthorOrAdmin(comment)">Supprimer</button>
+            </div>
+          </div>
+       
       </div>
     </div>
   </div>
@@ -38,11 +43,115 @@
 <script>
 import Nav from '../components/Nav.vue'
 
+const axios = require("axios");
+const instance = axios.create({
+  baseURL: "http://localhost:3000/api",
+});
+
 export default {
   name: 'Profile',
   components: {
     Nav
   },
+  data: function() {
+    return {
+      userStore: this.$store.state.user,
+      userProfile: [],
+      userPosts: [],
+    }
+  },
+  computed: {
+    isUserOrAdmin: function() {
+      // On regarde si l'userId de la personne connectée correspond à l'userId du profil ou si elle est admin. Si oui, on retourne true, si non, false.
+      if (this.userProfile.id == this.userStore.userId) {
+        return true;
+      } else if (this.userProfile.is_admin == 1) {
+        return true;
+      } else {
+        return false;
+      }
+    },
+
+
+  },
+  methods: {
+    deleteAccount: function() {
+      // Requête delete pour supprimer le compte de l'utilisateur. Une fois supprimé de la base de données, on le déconnecte et on le renvoie vers la page de connexion.
+      const self = this;
+      instance.delete("/auth/" + this.$route.params.id)
+      .then(function() {
+        self.$store.commit('logout');
+        self.$router.push('/');
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
+    },
+    getPostsAndComments: function() {
+      const self = this;
+      instance.get("/auth/" + this.$route.params.id + "/posts")
+        .then(function (response) {
+          self.userPosts = response.data;
+          for (let i = 0; i < self.userPosts.length; i++) {
+            instance.get("/posts/" + self.userPosts[i].id + "/comments")
+              .then(function (response) {
+                self.$set(self.userPosts, i, {...self.userPosts[i], comments: response.data});
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
+          }
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    },
+    isPostAuthorOrAdmin: function(post) {
+      if (this.userStore.userId == post.id_user) {
+        return true;
+      } else if (this.userProfile.is_admin == 1) {
+        return true;
+      } else {
+        return false;
+      }
+    },
+        isCommentAuthorOrAdmin: function(comment) {
+      if (this.userStore.userId == comment.id_user_comment) {
+        return true;
+      } else if (this.userProfile.is_admin == 1) {
+        return true;
+      } else {
+        return false;
+      }
+    },
+    updatePost: function(postId) {},
+    deletePost: function(postId) {      
+      instance.delete("/posts/" + postId)
+      .then(() => {
+        this.getPostsAndComments();
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
+    },
+  },
+  mounted: function() {
+    const self = this;
+    // Si le user n'est pas connecté et essaye d'accéder à la page, on fait un retour vers la page de connexion.
+    if (this.userStore.userId == -1) {
+      this.$router.push('/');
+      return;
+    }
+    // Requête get pour récupérer les informations du user.
+    instance.get("/auth/" + this.$route.params.id)
+    .then(function (response) {
+      self.userProfile = response.data[0];
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+    this.getPostsAndComments();
+  }
 }
 </script>
 

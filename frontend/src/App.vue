@@ -111,7 +111,7 @@ body {
   flex-direction: column;
   align-items: flex-start;
   background: #f0f2f5;
-  padding: 0 15px;
+  padding: 0px 15px 8px 15px;
   border-radius: 15px;
   margin-bottom: 10px;
   font-size: 0.9em;
