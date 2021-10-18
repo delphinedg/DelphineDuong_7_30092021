@@ -18,6 +18,7 @@ if (!user) {
   user = {
     userId: -1,
     token: "",
+    isAdmin: -1,
   };
 } else {
   try {
@@ -27,6 +28,7 @@ if (!user) {
     user = {
       userId: -1,
       token: "",
+      isAdmin: -1,
     };
   }
 }

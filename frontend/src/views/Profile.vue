@@ -1,7 +1,6 @@
 <template>
   <div class="profile-page">
     <Nav/>
-    
     <div class="profile">
       <div class="profile-card">
         <div class="profile-card__image">
@@ -20,21 +19,14 @@
           <p class="card-post__content" v-if='post.text_post !=""'>{{ post.text_post }}</p>
           <div class="card-post__image" v-if='post.image_url !=""'><img :src="post.image_url"/></div>
         </div>
-        <div class="btn-post">
-          <button class="btn-post__update" @click="updatePost()" v-if="isPostAuthorOrAdmin(post)">Modifier</button>
-          <button class="btn-post__delete" @click="deletePost(post.id)" v-if="isPostAuthorOrAdmin(post)">Supprimer</button>
-        </div>
+        <button class="btn-post__delete" @click="deletePost(post.id)" v-if="isPostAuthorOrAdmin(post)">Supprimer</button>
         <hr>
-          <div class="card-comment" :key="i" v-for="(comment, i) in post.comments">
-            <p class="card-comment__name"><a href="#">{{ comment.first_name }} {{ comment.last_name }}</a></p>
-            <p class="card-comment__date">{{ comment.date_comment }}</p>
-            <p class="card-comment__content">{{ comment.text_comment }}</p>
-            <div class="btn-post">
-              <button class="btn-post__update" v-if="isCommentAuthorOrAdmin(comment)">Modifier</button>
-              <button class="btn-post__delete" v-if="isCommentAuthorOrAdmin(comment)">Supprimer</button>
-            </div>
-          </div>
-       
+        <div class="card-comment" :key="i" v-for="(comment, i) in post.comments">
+          <p class="card-comment__name"><router-link :to="{ name: 'Profile', params: { id: comment.id_user_comment }}">{{ comment.first_name }} {{ comment.last_name }}</router-link></p>
+          <p class="card-comment__date">{{ comment.date_comment }}</p>
+          <p class="card-comment__content">{{ comment.text_comment }}</p>
+          <button class="btn-post__delete" v-if="isCommentAuthorOrAdmin(comment)" @click="deleteComment(comment.id)">Supprimer</button>
+        </div>
       </div>
     </div>
   </div>
@@ -71,8 +63,6 @@ export default {
         return false;
       }
     },
-
-
   },
   methods: {
     deleteAccount: function() {
@@ -90,41 +80,40 @@ export default {
     getPostsAndComments: function() {
       const self = this;
       instance.get("/auth/" + this.$route.params.id + "/posts")
-        .then(function (response) {
-          self.userPosts = response.data;
-          for (let i = 0; i < self.userPosts.length; i++) {
-            instance.get("/posts/" + self.userPosts[i].id + "/comments")
-              .then(function (response) {
-                self.$set(self.userPosts, i, {...self.userPosts[i], comments: response.data});
-              })
-              .catch(function (error) {
-                console.log(error);
-              });
-          }
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
+      .then(function (response) {
+        self.userPosts = response.data;
+        for (let i = 0; i < self.userPosts.length; i++) {
+          instance.get("/posts/" + self.userPosts[i].id + "/comments")
+            .then(function (response) {
+              self.$set(self.userPosts, i, {...self.userPosts[i], comments: response.data});
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        }
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
     },
     isPostAuthorOrAdmin: function(post) {
       if (this.userStore.userId == post.id_user) {
         return true;
-      } else if (this.userProfile.is_admin == 1) {
+      } else if (this.userStore.isAdmin == 1) {
         return true;
       } else {
         return false;
       }
     },
-        isCommentAuthorOrAdmin: function(comment) {
+    isCommentAuthorOrAdmin: function(comment) {
       if (this.userStore.userId == comment.id_user_comment) {
         return true;
-      } else if (this.userProfile.is_admin == 1) {
+      } else if (this.userStore.isAdmin == 1) {
         return true;
       } else {
         return false;
       }
     },
-    updatePost: function(postId) {},
     deletePost: function(postId) {      
       instance.delete("/posts/" + postId)
       .then(() => {
@@ -133,6 +122,15 @@ export default {
       .catch(function(error) {
         console.log(error);
       });
+    },
+    deleteComment:function(commentId) {
+    instance.delete("/comments/" + commentId)
+      .then(() => {
+        this.getPostsAndComments();
+      })
+      .catch(function(error) {
+        console.log(error);
+      }); 
     },
   },
   mounted: function() {

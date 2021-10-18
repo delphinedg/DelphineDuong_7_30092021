@@ -68,6 +68,15 @@ body {
   align-items: center;
 }
 
+.create-post__title {
+  width: 50%;
+  background: #ffd7d7;
+  padding: 0 30px;
+  box-shadow: 2px 2px 2px rgb(219, 219, 219);
+  text-align: left;
+  font-weight: bold;
+}
+
 .card {
   width: 50%;
   background: #fff;
@@ -76,7 +85,7 @@ body {
   flex-direction: column;
   align-items: flex-start;
   padding: 15px 30px;
-  margin: 10px 0;
+  margin: 0 0 10px 0;
 }
 
 .card-post {
