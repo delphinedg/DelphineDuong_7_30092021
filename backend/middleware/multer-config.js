@@ -4,6 +4,7 @@ const MIME_TYPES = {
   "image/jpg": "jpg",
   "image/jpeg": "jpg",
   "image/png": "png",
+  "image/gif": "gif",
 };
 
 // On crée une constante storage à passer à multer comme configuration

@@ -5,6 +5,20 @@
 </template>
 
 <style lang="scss">
+$primary-color: #d1515a;
+
+@mixin mobile {
+    @media screen and (max-width: 767px){
+        @content;
+    }   
+}
+
+@mixin tablet {
+    @media screen and (max-width: 992px){
+        @content;
+    }
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -20,19 +34,22 @@ body {
 }
 
 .btn {
-    background: #dd2602;
+    background: $primary-color;
     color:white;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: bold;
     border: none;
-    width: 100%;
-    padding: 16px;
+    padding: 10px;
+    font-size: 0.9em;
     transition: .4s background-color;
-
     &:hover {
       cursor: pointer;
-      background: darken(#dd2602, 5);
+      background: darken($primary-color, 5);
+    }
+
+    &-login {
+      width: 50%;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 16px;
     }
 
     &--disabled{
@@ -47,34 +64,19 @@ body {
 
     &--outlined {
       background: #fff;
-      color: #dd2602;
-      border: 1px solid #dd2602;
-      width: 50%;
+      color: $primary-color;
+      border: 1px solid $primary-color;
 
       &:hover {
         color: #fff;
       }
     }
-
-    &--post{
-      width: auto;
-      padding: 10px 25px;
-    }
   }
 
-.all-posts, .profile, .create-post {
+.all-posts {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.create-post__title {
-  width: 50%;
-  background: #ffd7d7;
-  padding: 0 30px;
-  box-shadow: 2px 2px 2px rgb(219, 219, 219);
-  text-align: left;
-  font-weight: bold;
 }
 
 .card {
@@ -86,6 +88,31 @@ body {
   align-items: flex-start;
   padding: 15px 30px;
   margin: 0 0 10px 0;
+  border-radius: 10px;
+
+  @include tablet {
+    width: 70%;
+  }
+
+  @include mobile {
+    width: 80%;
+  }
+
+  & a {
+    text-decoration: none;
+    color: #000;
+    font-weight: bold;
+
+    &:hover {
+      color: $primary-color;
+    }
+  }
+
+  &__title {
+    font-weight: bold;
+
+    font-size: 1.2em;
+  }
 }
 
 .card-post {
@@ -103,15 +130,16 @@ body {
   &__date {
     font-size: 0.9em;
     color: grey;
-    margin: 3px 0 5px 0;
+    margin: 3px 0 10px 0;
   }
 
   &__content {
-    margin-top: 5px;
-
+    margin-top: 0px;
   }
+
   &__image img{
     max-width: 100%;
+    max-height: 350px;
   }
 }
 
@@ -140,40 +168,10 @@ body {
   }
 }
 
-.add-comments {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items:flex-end;
-
-  & button {
-    width: 20%;
-    margin-left: 10px;
-  }
-  & textarea {
-    widows: 60%;
-  }
-}
-
-textarea {
-  max-width: 100%;
-  padding: 8px 3px;
-  line-height: 1.5;
-  border-radius: 15px;
-  font-size: 1em;
-  background: #f0f2f5;
-  border: none;
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-}
-
-input {
-  margin: 10px 0;
-}
-
 hr {
     border: none;
-    border-top: 1px solid #666;
-    height: 1px;
+    border-top: 1px solid #ececec;
     width: 100%;
+    margin: 10px 0;
 }
 </style>

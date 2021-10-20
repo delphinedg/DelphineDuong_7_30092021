@@ -1,13 +1,15 @@
 <template>
-    <div id="nav">
-        <div id=nav__logo>
-            <img id="nav__logo" alt="Groupomania logo" src="../assets/logo-white.svg"/>
+    <div class="nav">
+        <div class=nav__logo>
+            <img class="nav__logo" alt="Groupomania logo" src="../assets/logo.svg"/>
         </div>
-        <div id="nav__link">
-            <router-link to="/posts">Fil d'actualité</router-link> |
-            <router-link :to="{ name: 'Profile', params: { id: user.userId }}">Mon compte</router-link> |
-            <button @click="logout()">Déconnexion</button>
+        <div class="nav__link">
+            <router-link to="/posts">Fil d'actualité</router-link><span class="separator"> | </span>
+            <router-link :to="{ name: 'Profile', params: { id: user.userId }}">Mon compte</router-link>
         </div>
+
+          <button @click="logout()" class="btn btn--outlined">Déconnexion</button>
+  
     </div>
 </template>
 
@@ -31,25 +33,51 @@ export default {
 </script>
 
 <style scoped lang="scss">
-#nav {
-  padding: 30px 50px;
-  background: rgb(56, 56, 56);
+@mixin mobile {
+    @media screen and (max-width: 767px){
+        @content;
+    }   
+}
+
+.nav {
+  padding: 10px 40px;
+  background: #fff;
   display: flex;
   justify-content:space-between;
-  align-content: center;
+  align-items: center;
+  box-shadow: 0px 1px 2px rgb(219, 219, 219);
+
+  @include mobile {
+    flex-direction: column;
+  }
 
   &__logo{
       width: 150px;
   }
 
+  &__link {
+    @include mobile {
+      padding: 20px;
+    }
+  }
+
     a {
     font-weight: bold;
-    color: #fff;
+    color: #000;
     text-decoration: none;
 
+    &:hover {
+      color: #d1515a;
+    }
+
     &.router-link-exact-active {
-      color: #42b983;
+      color: #d1515a;
     }
   }
 }
+
+.separator {
+  color: #000;
+}
+
 </style>

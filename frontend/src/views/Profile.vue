@@ -8,24 +8,25 @@
         </div>
         <h1 class="profile-card__name">{{ userProfile.first_name }} {{ userProfile.last_name }}</h1>
         <p class="profile-card__email">{{ userProfile.email }}</p>
-        <button class="btn btn--post" @click="deleteAccount()" v-if="isUserOrAdmin">Supprimer mon compte</button>
+        <button class="btn" @click="deleteAccount()" v-if="isUserOrAdmin">Supprimer mon compte</button>
       </div>
     </div>
     <div class="all-posts" :key="index" v-for="(post, index) in userPosts">
       <div class="card">
         <div class="card-post">
-          <p class="card-post__name"><router-link :to="{ name: 'Profile', params: { id: post.id_user }}">{{ post.first_name }} {{ post.last_name }}</router-link></p>
+          <p class="card-post__name"><a :href="$router.resolve({ name: 'Profile', params: { id: post.id_user }}).href">{{ post.first_name }} {{ post.last_name }}</a></p>
           <p class="card-post__date">{{ post.date_post }}</p>
           <p class="card-post__content" v-if='post.text_post !=""'>{{ post.text_post }}</p>
           <div class="card-post__image" v-if='post.image_url !=""'><img :src="post.image_url"/></div>
         </div>
-        <button class="btn-post__delete" @click="deletePost(post.id)" v-if="isPostAuthorOrAdmin(post)">Supprimer</button>
+        <hr>
+        <button class="btn btn--outlined" @click="deletePost(post.id)" v-if="isPostAuthorOrAdmin(post)">Supprimer la publication</button>
         <hr>
         <div class="card-comment" :key="i" v-for="(comment, i) in post.comments">
-          <p class="card-comment__name"><router-link :to="{ name: 'Profile', params: { id: comment.id_user_comment }}">{{ comment.first_name }} {{ comment.last_name }}</router-link></p>
+          <p class="card-comment__name"><a :href="$router.resolve({ name: 'Profile', params: { id: comment.id_user_comment }}).href">{{ comment.first_name }} {{ comment.last_name }}</a></p>
           <p class="card-comment__date">{{ comment.date_comment }}</p>
           <p class="card-comment__content">{{ comment.text_comment }}</p>
-          <button class="btn-post__delete" v-if="isCommentAuthorOrAdmin(comment)" @click="deleteComment(comment.id)">Supprimer</button>
+          <button class="btn btn--outlined" v-if="isCommentAuthorOrAdmin(comment)" @click="deleteComment(comment.id)">Supprimer</button>
         </div>
       </div>
     </div>
@@ -57,7 +58,7 @@ export default {
       // On regarde si l'userId de la personne connectée correspond à l'userId du profil ou si elle est admin. Si oui, on retourne true, si non, false.
       if (this.userProfile.id == this.userStore.userId) {
         return true;
-      } else if (this.userProfile.is_admin == 1) {
+      } else if (this.userStore.isAdmin == 1) {
         return true;
       } else {
         return false;
@@ -68,14 +69,16 @@ export default {
     deleteAccount: function() {
       // Requête delete pour supprimer le compte de l'utilisateur. Une fois supprimé de la base de données, on le déconnecte et on le renvoie vers la page de connexion.
       const self = this;
-      instance.delete("/auth/" + this.$route.params.id)
-      .then(function() {
-        self.$store.commit('logout');
-        self.$router.push('/');
-      })
-      .catch(function(error) {
-        console.log(error);
-      });
+      if (confirm("Etes-vous sûr de vouloir supprimer votre compte ? Vous ne pourrez plus accéder au réseau social Groupomania.")) {
+        instance.delete("/auth/" + this.$route.params.id)
+        .then(function() {
+          self.$store.commit('logout');
+          self.$router.push('/');
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+      }
     },
     getPostsAndComments: function() {
       const self = this;
@@ -115,22 +118,33 @@ export default {
       }
     },
     deletePost: function(postId) {      
-      instance.delete("/posts/" + postId)
-      .then(() => {
-        this.getPostsAndComments();
-      })
-      .catch(function(error) {
-        console.log(error);
-      });
+      if (confirm("Etes-vous sûr de vouloir supprimer cette publication ?")) {
+        instance.delete("/posts/" + postId, {
+          headers: {
+          Authorization: 'Bearer ' + this.userStore.token,
+          }
+        }).then(() => {
+          this.getAllPostsAndComments();
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+      }
     },
-    deleteComment:function(commentId) {
-    instance.delete("/comments/" + commentId)
-      .then(() => {
-        this.getPostsAndComments();
+    deleteComment: function(commentId) {
+    if (confirm("Etes-vous sûr de vouloir supprimer ce commentaire ?")) {
+      instance.delete("/comments/" + commentId, {
+        headers: {
+        Authorization: 'Bearer ' + this.userStore.token,
+        }
       })
-      .catch(function(error) {
-        console.log(error);
-      }); 
+        .then(() => {
+          this.getAllPostsAndComments();
+        })
+        .catch(function(error) {
+          console.log(error);
+        }); 
+      }
     },
   },
   mounted: function() {
@@ -154,6 +168,12 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .profile-card {
   padding: 30px;
   &__image img {

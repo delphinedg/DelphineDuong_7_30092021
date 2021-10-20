@@ -1,9 +1,10 @@
 const db = require("../config/config-db");
+const fs = require("fs");
 
 exports.getAllPosts = (req, res, next) => {
   db.promise()
     .query(
-      "SELECT * FROM users u JOIN posts p ON u.id = p.id_user ORDER BY date_post DESC"
+      "SELECT u.first_name, u.last_name, u.is_admin, p.id, p.id_user, DATE_FORMAT(p.date_post, '%D %M %Y, %H:%i:%s') AS 'date_post', p.text_post, p.image_url FROM users u JOIN posts p ON u.id = p.id_user ORDER BY date_post DESC"
     )
     .then(([posts]) => res.status(200).json(posts))
     .catch((error) => res.status(400).json({ error }));
@@ -46,17 +47,25 @@ exports.updateOnePost = (req, res, next) => {
 exports.deleteOnePost = (req, res, next) => {
   const id = req.params.id;
   db.promise()
-    .query("DELETE FROM posts WHERE id = ? LIMIT 1", [id])
-    .then(() => res.status(200).json({ message: "Pulication supprimée" }))
+    .query("SELECT * FROM posts WHERE id = ?", [id])
+    .then(([post]) => {
+      const filename = post[0].image_url.split("/images/")[1];
+      fs.unlink(`images/${filename}`, () => {
+        db.promise()
+          .query("DELETE FROM posts WHERE id = ? LIMIT 1", [id])
+          .then(() => res.status(200).json({ message: "Pulication supprimée" }))
+          .catch((error) => res.status(400).json({ error }));
+      });
+    })
     .catch((error) => res.status(400).json({ error }));
 };
 
 exports.getAllCommentsOfAPost = (req, res, next) => {
-  const idPost = req.params.id;
+  const id = req.params.id;
   db.promise()
     .query(
-      "SELECT c.*, u.first_name, u.last_name, u.is_admin FROM posts p JOIN comments c ON p.id = c.id_post JOIN users u ON c.id_user_comment = u.id WHERE p.id = ? ORDER BY date_comment",
-      [idPost]
+      "SELECT c.id, c.id_post, DATE_FORMAT(c.date_comment, '%D %M %Y, %H:%i:%s') AS 'date_comment', c.text_comment, c.id_user_comment, u.first_name, u.last_name, u.is_admin FROM posts p JOIN comments c ON p.id = c.id_post JOIN users u ON c.id_user_comment = u.id WHERE p.id = ? ORDER BY date_comment",
+      [id]
     )
     .then(([posts]) => res.status(200).json(posts))
     .catch((error) => res.status(400).json({ error }));

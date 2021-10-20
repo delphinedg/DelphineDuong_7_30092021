@@ -17,13 +17,13 @@
         <input v-model="password" class="form-row__input" type="password" placeholder="Mot de passe" required/>
       </div>
       <div class="form-row">
-        <button class="btn" :class="{'btn--disabled' : !validateForm}" @click="login()" v-if="mode == 'login'">Se connecter</button>
-        <button class="btn" :class="{'btn--disabled' : !validateForm}" @click="createAccount()" v-else>Créer mon compte</button>
+        <button class="btn btn-login" :class="{'btn--disabled' : !validateForm}" @click="login()" v-if="mode == 'login'">Se connecter</button>
+        <button class="btn btn-login" :class="{'btn--disabled' : !validateForm}" @click="createAccount()" v-else>Créer mon compte</button>
       </div>
       <div class="separator">ou</div>
       <div class="form-row">
-        <button class="btn btn--outlined" @click="switchToSignup()" v-if="mode == 'login'">S'incrire</button>
-        <button class="btn btn--outlined" @click="switchToLogin()" v-else>Se connecter</button>
+        <button class="btn btn-login btn--outlined" @click="switchToSignup()" v-if="mode == 'login'">S'incrire</button>
+        <button class="btn btn-login btn--outlined" @click="switchToLogin()" v-else>Se connecter</button>
       </div>
     </div>
   </div>
@@ -122,7 +122,7 @@ export default {
   max-width: 100%;
   width: 540px;
   background:white;
-  border-radius: 16px;
+  border-radius: 10px;
   padding:32px;
 
   &__title {
@@ -144,7 +144,6 @@ export default {
   &__input {
     display:flex;
     border: none;
-    border-radius: 10px;
     background:#f2f2f2;
     font-weight: 500;
     font-size: 16px;
