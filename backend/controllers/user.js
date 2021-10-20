@@ -4,22 +4,36 @@ const db = require("../config/config-db");
 
 exports.signup = (req, res, next) => {
   //console.log(req.body);
-  bcrypt
-    .hash(req.body.password, 10)
-    .then((hash) => {
-      const email = req.body.email;
-      const password = hash;
-      const firstName = req.body.firstName;
-      const lastName = req.body.lastName;
-      db.promise()
-        .query(
-          "INSERT INTO users(id, first_name, last_name, email, password) VALUES (NULL, ?, ?, ?, ?)",
-          [firstName, lastName, email, password]
-        )
-        .then(() => res.status(201).json({ message: "Utilisateur créé" }))
-        .catch((error) => res.status(400).json({ error }));
-    })
-    .catch((error) => res.status(500).json({ error }));
+  const email = req.body.email;
+  const firstName = req.body.firstName;
+  const lastName = req.body.lastName;
+  let password = req.body.password;
+  const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+  const passwordRegex = /.{8,32}/;
+  const nameRegex =
+    /^[a-zA-Zéèçàêëöùä]+(([',. -][a-zA-Zéèçàêëöùä ])?[a-zA-Zéèçàêëöùä]*)*$/;
+  if (
+    nameRegex.test(firstName) == false ||
+    nameRegex.test(lastName) == false ||
+    emailRegex.test(email) == false ||
+    passwordRegex.test(password) == false
+  ) {
+    return res.status(400).json({ error: "Informations incorrectes" });
+  } else {
+    bcrypt
+      .hash(req.body.password, 10)
+      .then((hash) => {
+        password = hash;
+        db.promise()
+          .query(
+            "INSERT INTO users(id, first_name, last_name, email, password) VALUES (NULL, ?, ?, ?, ?)",
+            [firstName, lastName, email, password]
+          )
+          .then(() => res.status(201).json({ message: "Utilisateur créé" }))
+          .catch((error) => res.status(400).json({ error }));
+      })
+      .catch((error) => res.status(500).json({ error }));
+  }
 };
 
 exports.login = (req, res, next) => {
