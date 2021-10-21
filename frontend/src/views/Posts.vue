@@ -215,20 +215,22 @@ export default {
       this.urlUpdate = URL.createObjectURL(this.image);
     },
     deleteImage: function(post) {
-      post.image_url = null;
+      post.image_url = '';
     },
     updatePost: function(postId, postText, postImage) {
       const formData = new FormData();
-      if (this.image != null && 
-      (this.image.type === "image/jpeg" || this.image.type === "image/jpg" || this.image.type === "image/png" || this.image.type === "image/gif")) {
+      if (!postText && !postImage && this.image == null) {
+        this.deletePost(postId);
+      } else if (this.image != null) {
         formData.append('textPost', postText);
         formData.append('image', this.image, this.image.name);
-      } else if (!postImage) {
+      } else if (postImage) {
         formData.append('textPost', postText);
-      } else if (!postText) {
         formData.append('image', postImage);
-      } else {
+      } else if (!postImage && this.image == null) {
         formData.append('textPost', postText);
+      } else {
+        console.log("erreur");
       }
       instance.put("/posts/" + postId, formData, {
         headers: {
@@ -428,7 +430,7 @@ h1 {
 
   &__image img{
     max-width: 100%;
-    max-height: 350px;
+    max-height: 300px;
     margin: 10px 0;
   }
 }
