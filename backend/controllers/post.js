@@ -31,17 +31,23 @@ exports.createPost = (req, res, next) => {
 };
 
 exports.updateOnePost = (req, res, next) => {
-  const textPost = req.body.textPost;
-  const imageUrl = req.body.imageUrl;
-  const id = req.params.id;
-  db.promise()
-    .query("UPDATE posts SET text_post = ?, image_url = ? WHERE id = ?", [
-      textPost,
-      imageUrl,
-      id,
-    ])
-    .then(() => res.status(201).json({ message: "Publication modifiée" }))
-    .catch((error) => res.status(400).json({ error }));
+  if (!req.body) {
+    res.status(400).json({ message: "Vide" });
+  } else {
+    const postId = req.params.id;
+    const textPost = req.body.textPost;
+    const imageUrl = req.file
+      ? `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
+      : req.body.image;
+    db.promise()
+      .query("UPDATE posts SET text_post = ?, image_url = ? WHERE id = ?", [
+        textPost,
+        imageUrl,
+        postId,
+      ])
+      .then(() => res.status(201).json({ message: "Publication modifiée" }))
+      .catch((error) => res.status(400).json({ error }));
+  }
 };
 
 exports.deleteOnePost = (req, res, next) => {
