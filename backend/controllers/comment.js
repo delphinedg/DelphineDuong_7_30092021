@@ -1,5 +1,7 @@
 const db = require("../config/config-db");
 
+// Fonction pour créer un commentaire.
+// On définit des constantes pour récupérer les valeurs de la requête. On fait un INSERT INTO pour insérer les valeurs dans la table "comments". Si tout se passe bien, on envoie un status 201 (created), si non on envoie un status 400 (bad request).
 exports.createComment = (req, res, next) => {
   const postId = req.body.postId;
   const userId = req.body.userId;
@@ -14,6 +16,8 @@ exports.createComment = (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 };
 
+// Fonction pour modifier un commentaire.
+// On définit des constantes pour récupérer les valeurs de la requête. On fait un UPDATE pour modifier la valeur du champ text_comment du commentaire correspondant (defini par l'id).
 exports.updateOneComment = (req, res, next) => {
   const textComment = req.body.textComment;
   const id = req.params.id;
@@ -26,6 +30,8 @@ exports.updateOneComment = (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 };
 
+// Fonction pour supprimer un commentaire.
+// On fait un DELETE FROM pour supprimer le commentaire (defini par l'id) de la table "comments" et on met une limite à 1 pour supprimer une seule ligne.
 exports.deleteOneComment = (req, res, next) => {
   const id = req.params.id;
   db.promise()

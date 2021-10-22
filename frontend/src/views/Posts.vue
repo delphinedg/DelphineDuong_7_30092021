@@ -11,11 +11,11 @@
         </p>
         <form class="form" @submit.prevent="createPost()" enctype="multipart/form-data">
           <div class="form-group">
-            <textarea v-model="textPost" name="textPost" rows="4" placeholder="Ecrivez quelque chose..."></textarea>
+            <textarea v-model="textPost" name="textPost" rows="5" placeholder="Ecrivez quelque chose..."></textarea>
           </div>
           <hr>
           <div class="form-group">
-            <label class="form-label">Ajoutez une image à votre publication : </label>
+            <label class="form-group__label">Ajoutez une image à votre publication : </label>
             <input type="file" name="image" accept="image/gif, image/jpeg, image/jpg, image/png" @change="onFileUpload"/>
             <div class="preview" v-if="url">
               <img :src="url">
@@ -36,7 +36,7 @@
           <p class="card-post__name"><router-link :to="{ name: 'Profile', params: { id: post.id_user }}">{{ post.first_name }} {{ post.last_name }}</router-link></p>
           <p class="card-post__date">{{ post.date_post }}</p>
           <div class="card-post__content">
-            <input type="text" v-model="post.text_post" :id="`post-edit-${post.id}`" @keydown.enter="updatePost(post.id, post.text_post)" v-if="postEditingId == post.id && isPostAuthorOrAdmin(post)" placeholder="Ecrivez quelque chose..."/>
+            <textarea type="text" rows="5" v-model="post.text_post" :id="`post-edit-${post.id}`" v-if="postEditingId == post.id && isPostAuthorOrAdmin(post)" placeholder="Ecrivez quelque chose..."></textarea>
             <p v-else>{{ post.text_post }}</p>
           </div>
           <div class="card-post__image">
@@ -73,20 +73,23 @@
           </p>
           <p class="card-comment__date">{{ comment.date_comment }}</p>
           <div class="card-comment__content">
-            <input type="text" v-model="comment.text_comment" :id="`comment-edit-${comment.id}`" v-if="commentEditingId == comment.id && isCommentAuthorOrAdmin(comment)" @blur="updateComment(comment.id, comment.text_comment)" @keydown.enter="updateComment(comment.id, comment.text_comment)"/>
+            <input type="text" v-model="comment.text_comment" :id="`comment-edit-${comment.id}`" v-if="commentEditingId == comment.id && isCommentAuthorOrAdmin(comment)"/>
             <p v-else >{{ comment.text_comment }}</p>
           </div>
           <!-- Boutons supprimer et modifier -->
-          <div class="card-comment__btn">
-            <button class="btn btn--outlined btn-delete" @click.prevent="deleteComment(comment.id)" v-if="isCommentAuthorOrAdmin(comment)">Supprimer
+          <div class="card-comment__btn" v-if="isCommentAuthorOrAdmin(comment) && commentEditingId == ''">
+            <button class="btn btn--outlined btn-delete" @click.prevent="deleteComment(comment.id)">Supprimer
             </button>
-            <button class="btn btn--outlined" @click.prevent="setEditingComment(comment)" v-if="isCommentAuthorOrAdmin(comment)">Modifier</button>
+            <button class="btn btn--outlined" @click.prevent="setEditingComment(comment)">Modifier</button>
+          </div>
+          <div class="card-comment__btn" v-if="isCommentAuthorOrAdmin(comment) && commentEditingId == comment.id">
+            <button class="btn" @click.prevent="updateComment(comment.id, comment.text_comment)">Enregistrer</button>
           </div>
         </div>
         <!-- FIN COMMENTAIRES -->
         <!-- DEBUT AJOUT DE COMMENTAIRE -->
         <div class="add-comments">
-          <textarea v-model="textComment[index]" id="write-comment" cols="100" rows="1" placeholder="Ecrivez un commentaire..."></textarea>
+          <textarea v-model="textComment[index]" id="write-comment" cols="100" rows="1" placeholder="Ecrivez un commentaire..." maxlength="500"></textarea>
           <button class="btn" @click.prevent="createComment(post.id, index)">Commenter</button>
         </div>
         <!-- FIN AJOUT DE COMMENTAIRE -->
@@ -108,20 +111,25 @@ const instance = axios.create({
 export default {
   name: 'Posts',
   components: {
-    Nav
+    Nav,
   },
   data: function() {
     return {
       userStore: this.$store.state.user,
-      auth: 'Bearer ' + this.$store.state.user.token,
       posts: [],
       textPost: '',
-      image: null,
+      image: '',
       url: null,
+      imageUpdate: '',
       urlUpdate: null,
       textComment: [],
       postEditingId: '',
       commentEditingId: '',
+      auth: {
+        headers: {
+        Authorization: 'Bearer ' + this.$store.state.user.token,
+        }
+      },
     }  
   },
   computed: {
@@ -129,30 +137,28 @@ export default {
   methods: {
     getAllPostsAndComments: function() {
       const self = this;
-      instance.get("/posts", {
-        headers: {
-        Authorization: this.auth,
-        }
-      }).then(function (response) {
+      // On fait une requête GET pour récupérer toutes les publications. 
+      // Une fois que nous avons les données (objets post), on insère les objets dans le tableau "posts" qui se trouve dans la data, puis on boucle. Pour chaque post, on fait une requête GET pour récupérer les commentaires correspondants, et on ajoute les commentaires dans l'objet post.
+      instance.get("/posts", this.auth)
+      .then(function (response) {
         self.posts = response.data;
         for (let i = 0; i < self.posts.length; i++) {
-          instance.get("/posts/" + self.posts[i].id + "/comments", {
-            headers: {
-            Authorization: self.auth,
-            }
-          }).then(function (response) {
-              self.$set(self.posts, i, {...self.posts[i], comments: response.data});
-            })
-            .catch(function (error) {
-              console.log(error);
-            });
+          instance.get("/posts/" + self.posts[i].id + "/comments", self.auth)
+          .then(function (response) {
+            self.$set(self.posts, i, {...self.posts[i], comments: response.data});
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
         }
       })
+      // S'il y a une erreur, on affiche l'erreur dans la console.
       .catch(function (error) {
         console.log(error);
       });
     },
     isPostAuthorOrAdmin: function(post) {
+      // Si l'userId de l'utilisateur connecté correspond au userId du post, on renvoie true. Si non si, le user est un admin, on renvoie true. Si non, on renvoie false. 
       if (this.userStore.userId == post.id_user) {
         return true;
       } else if (this.userStore.isAdmin == 1) {
@@ -162,6 +168,7 @@ export default {
       }
     },
     isCommentAuthorOrAdmin: function(comment) {
+    // Si l'userId de l'utilisateur connecté correspond au userId du post, on renvoie true. Si non si, le user est un admin, on renvoie true. Si non, on renvoie false. 
       if (this.userStore.userId == comment.id_user_comment) {
         return true;
       } else if (this.userStore.isAdmin == 1) {
@@ -176,82 +183,85 @@ export default {
       //console.log(this.image);
     },
     createPost: function() {
-      // On crée le l'objet javascript form data
-      const formData = new FormData();
-      // On ajoute les données que l'on souhaite dans le form data. S'il y a une image, on récupère le texte, l'image et l'userId. Si non, on récupère le texte et l'userId.
-      if (this.image != null && 
-      (this.image.type === "image/jpeg" || this.image.type === "image/jpg" || this.image.type === "image/png" || this.image.type === "image/gif")) {
-        formData.append('textPost', this.textPost);
-        formData.append('image', this.image, this.image.name);
-        formData.append('userId', this.userStore.userId);
+      // S'il n'y a pas de valeur dans image et dans textPost, on envoie erreur dans la console.
+      if (this.image == null && this.textPost == '') {
+        console.log('erreur');
       } else {
-        formData.append('textPost', this.textPost);
-        formData.append('userId', this.userStore.userId);
-      }
-
-      // Requête POST pour envoyer le form data à l'API
-      instance.post("/posts", formData, {
-        headers: {
-        Authorization: this.auth,
+        // Si non, on crée un form data : si l'image n'est pas vide et qu'elle correspond aux formats autorisés, on insère dans formData l'image, le texte et l'userId. Si non, on insère le texte et l'userId.
+        const formData = new FormData();
+        if (this.image != '' && 
+        (this.image.type === "image/jpeg" || this.image.type === "image/jpg" || this.image.type === "image/png" || this.image.type === "image/gif")) {
+          formData.append('textPost', this.textPost);
+          formData.append('image', this.image, this.image.name);
+          formData.append('userId', this.userStore.userId);
+        } else {
+          formData.append('textPost', this.textPost);
+          formData.append('userId', this.userStore.userId);
         }
-      }).then(() => {
-        this.getAllPostsAndComments();
-        this.textPost = "";
-        this.image = null;
-        this.url = null;
-      })
-      .catch(function(error) {
-        console.log(error);
-      });
+
+        // On fait une requête POST pour envoyer le formData à l'API. Quand tout est ok, on appelle la fonction getAllPostsAndComments pour actualiser les publications, on réinitialise les champs texte, image et url.
+        instance.post("/posts", formData, this.auth)
+        .then(() => {
+          this.getAllPostsAndComments();
+          this.textPost = '';
+          this.image = '';
+          this.url = null;
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+      }
     },
     setEditingPost: function(post) {
+      // On définit que postEditingId (dans data) est égale à post.id et on fait un focus sur l'id concerné (textarea de la publication). On fait un setTimeout afin que le DOM ait le temps de charger.
       this.postEditingId = post.id;
       setTimeout(() => {
         document.getElementById(`post-edit-${post.id}`).focus();
       }, 1)
     },
     onFileUpdate: function(event) {
-      this.image = event.target.files[0];
-      this.urlUpdate = URL.createObjectURL(this.image);
+      this.imageUpdate = event.target.files[0];
+      this.urlUpdate = URL.createObjectURL(this.imageUpdate);
     },
     deleteImage: function(post) {
       post.image_url = '';
     },
     updatePost: function(postId, postText, postImage) {
-      const formData = new FormData();
-      if (!postText && !postImage && this.image == null) {
+      // S'il n'y a pas de valeur dans image et dans textPost, on supprime la publication.
+      if (postText == '' && postImage == '' && this.imageUpdate == '') {
         this.deletePost(postId);
-      } else if (this.image != null) {
-        formData.append('textPost', postText);
-        formData.append('image', this.image, this.image.name);
-      } else if (postImage) {
-        formData.append('textPost', postText);
-        formData.append('image', postImage);
-      } else if (!postImage && this.image == null) {
-        formData.append('textPost', postText);
       } else {
-        console.log("erreur");
-      }
-      instance.put("/posts/" + postId, formData, {
-        headers: {
-        Authorization: this.auth,
+        // Si non, on crée un form data.
+        const formData = new FormData();
+        if (this.imageUpdate != '') {
+          formData.append('textPost', postText);
+          formData.append('image', this.imageUpdate, this.imageUpdate.name);
+        } else if (postImage != '') {
+          formData.append('textPost', postText);
+          formData.append('image', postImage);
+        } else if (postImage == '' && this.imageUpdate == '') {
+          formData.append('textPost', postText);
+        } else {
+          console.log("erreur");
         }
-      }).then(() => {
-          this.getAllPostsAndComments();
-          this.postEditingId = '';
-          this.urlUpdate = null;
+        
+        // On fait une requpête PUT et on envoie le formData pour modifier les valeurs. Quand tout est ok, on appelle la méthode getAllPostsAndComments pour rafrechir les posts et on réinitialise postEditingId et urlUpdate.
+        instance.put("/posts/" + postId, formData, this.auth)
+        .then(() => {
+            this.getAllPostsAndComments();
+            this.postEditingId = '';
+            this.urlUpdate = null;
+          })
+        .catch(function(error) {
+          console.log(error);
         })
-      .catch(function(error) {
-        console.log(error);
-      })
+      }
     },
-    deletePost: function(postId) {      
-      if (confirm("Etes-vous sûr de vouloir supprimer cette publication ?")) {
-        instance.delete("/posts/" + postId, {
-          headers: {
-          Authorization: this.auth,
-          }
-        }).then(() => {
+    deletePost: function(postId) {
+      // On envoie un message pour confirmer la suppression de la publication. Si l'utilisateur clique sur OK, on fait une requête DELETE pour supprimer le post. Quant tout est ok, on fait appel à la méthode getAllPostsAndComments pour rafraichir les post et commentaires. S'il y a une erreur, on envoie l'erreur dans la console.      
+      if (confirm("Êtes-vous sûr de vouloir supprimer cette publication ?")) {
+        instance.delete("/posts/" + postId, this.auth)
+        .then(() => {
           this.getAllPostsAndComments();
         })
         .catch(function(error) {
@@ -260,15 +270,13 @@ export default {
       }
     },
     createComment: function(postId, index) {
+      // On fait une requête POST pour publier un commentaire. On y insère le postId (en paramètre), l'userId dans le store et le texte dans "textComment" (dans la data). Si tout est ok, on appelle la méthode getAllPostsAndComments pour rafraichir les post et commentaires. S'il y a une erreur, on envoie l'erreur dans la console. 
       instance.post("/comments", {
         postId: postId,
         userId: this.userStore.userId,
         textComment: this.textComment[index],
-      },{
-        headers: {
-        Authorization: this.auth,
-        }
-      }).then(() => {
+      },this.auth)
+      .then(() => {
         this.getAllPostsAndComments();
         this.textComment = [];
       })
@@ -283,13 +291,9 @@ export default {
       }, 1)
     },
     updateComment: function(commentId, commentText) {
-      instance.put("/comments/" + commentId, {
-        textComment: commentText,
-      },{
-        headers: {
-        Authorization: this.auth,
-        }
-      }).then(() => {
+      // On fait une requête PUT pour modifier le commentaire. Une fois que c'est fait, on appelle la fonction getAllPostsAndComments pour actualiser les publications et on réinitialise le commentEditingId. S'il y a une erreur, on envoie l'erreur dans la console. 
+      instance.put("/comments/" + commentId, { textComment: commentText }, this.auth)
+      .then(() => {
           this.getAllPostsAndComments();
           this.commentEditingId = '';
         })
@@ -298,13 +302,12 @@ export default {
       })
     },
     deleteComment: function(commentId) {
-    if (confirm("Etes-vous sûr de vouloir supprimer ce commentaire ?")) {
-      instance.delete("/comments/" + commentId, {
-        headers: {
-        Authorization: this.auth,
-        }
-      }).then(() => {
+      // On envoie un message pour confirmer la suppression du commentaire. Si l'utilisateur clique sur OK, on fait une requête DELETE pour supprimer. Quant tout est ok, on fait appel à la méthode getAllPostsAndComments pour rafraichir les post et commentaires. S'il y a une erreur, on envoie l'erreur dans la console.  
+      if (confirm("Êtes-vous sûr de vouloir supprimer ce commentaire ?")) {
+        instance.delete("/comments/" + commentId, this.auth)
+        .then(() => {
           this.getAllPostsAndComments();
+          return;
         })
         .catch(function(error) {
           console.log(error);
@@ -337,10 +340,6 @@ $primary-color: #d1515a;
     @media screen and (max-width: 992px){
         @content;
     }
-}
-
-h1 {
-  padding: 20px 0;
 }
 
 .create-post {
@@ -420,6 +419,8 @@ h1 {
 
   &__content {
     margin-top: 0px;
+    display: flex;
+    width: 100%;
   }
 
   &__image {
@@ -427,15 +428,9 @@ h1 {
     flex-direction: column;
     align-items: flex-start;
   }
-
-  &__image img{
-    max-width: 100%;
-    max-height: 300px;
-    margin: 10px 0;
-  }
 }
 
-img {
+.preview img, .card-post img {
     max-width: 100%;
     max-height: 300px;
     margin: 10px 0;
@@ -480,7 +475,17 @@ img {
 .form {
   width: 100%;
   text-align: start;
+}
 
+.form-group {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  flex-wrap: wrap;
+
+  &__label {
+    margin-right: 10px;
+  }
 }
 
 textarea {

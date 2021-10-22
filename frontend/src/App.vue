@@ -73,10 +73,5 @@ body {
     }
   }
 
-hr {
-    border: none;
-    border-top: 1px solid #ececec;
-    width: 100%;
-    margin: 10px 0;
-}
+
 </style>

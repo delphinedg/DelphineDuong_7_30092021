@@ -25,12 +25,17 @@ const instance = axios.create({
 export default {
   name: 'Profile',
   components: {
-    Nav
+    Nav,
   },
   data: function() {
     return {
       userStore: this.$store.state.user,
       userProfile: [],
+      auth: {
+        headers: {
+        Authorization: 'Bearer ' + this.$store.state.user.token,
+        }
+      },
     }
   },
   computed: {
@@ -48,8 +53,8 @@ export default {
   methods: {
     getAccount: function() {
       const self = this;
-      // Requête get pour récupérer les informations du user.
-      instance.get("/auth/" + this.$route.params.id)
+      // On fait une requête GET pour récupérer les informations du user. Une fois que nous avons les données (response), on insère les données dans la data "userProfile". S'il y a une erreur, on affiche l'erreur dans la console.
+      instance.get("/auth/" + this.$route.params.id, this.auth)
       .then(function (response) {
         self.userProfile = response.data[0];
         return;
@@ -60,13 +65,17 @@ export default {
       });
     },
     deleteAccount: function() {
-      // Requête delete pour supprimer le compte de l'utilisateur. Une fois supprimé de la base de données, on le déconnecte et on le renvoie vers la page de connexion.
+      // Requête DELETE pour supprimer le compte de l'utilisateur. Une fois supprimé de la base de données, si l'utilisateur est un admin, on le renvoie vers la page /posts. Si non, on déconnecte l'utilisateur et on le renvoie vers la page de connexion.
       const self = this;
-      if (confirm("Etes-vous sûr de vouloir supprimer votre compte ? Vous ne pourrez plus accéder au réseau social Groupomania.")) {
-        instance.delete("/auth/" + this.$route.params.id)
+      if (confirm("Êtes-vous sûr de vouloir supprimer votre compte ? Vous ne pourrez plus accéder au réseau social Groupomania.")) {
+        instance.delete("/auth/" + this.$route.params.id, this.auth)
         .then(function() {
-          self.$store.commit('logout');
-          self.$router.push('/');
+          if (self.userStore.isAdmin == 1) {
+            self.$router.push('/posts');
+          } else {
+            self.$store.commit('logout');
+            self.$router.push('/');
+          }
         })
         .catch(function(error) {
           console.log(error);
@@ -82,6 +91,11 @@ export default {
       return;
     }
     this.getAccount();
+  },
+  watch: {
+    '$route' () {
+      this.getAccount();
+    },
   },
 }
 </script>
@@ -105,16 +119,12 @@ export default {
   padding: 30px;
   border-radius: 10px;
 
-  &__name {
-    margin: 0;
-  }
-
   &__email {
     margin-top: 0;
   }
 
   &__image img {
-    width: 50%;
+    width: 40%;
   }
 }
 </style>

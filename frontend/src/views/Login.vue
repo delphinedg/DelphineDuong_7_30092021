@@ -6,7 +6,7 @@
     <div class="card-log">
       <h1 class=card-log__title v-if="mode == 'login'">Connexion</h1>
       <h1 class=card-log__title v-else>Inscription</h1>
-      <div class="form-row" v-if="mode == 'signup'">
+      <div class="form-row form-row--name" v-if="mode == 'signup'">
         <input v-model="lastName" class="form-row__input" type="text" placeholder="Nom" required/>
         <input v-model="firstName" class="form-row__input" type="text" placeholder="Prénom" required/>
       </div>
@@ -44,6 +44,7 @@ export default {
     }
   },
   computed: {
+    // Fonction pour ajouter la classe "btn--disabled" si la valeur = false et pour enlever la classe si la valeur = true.
     validateForm: function() {
       // Si mode = signup : si les champs ne sont pas vides on retourne true, sinon on retourne false.
       if (this.mode == 'signup') {
@@ -52,7 +53,7 @@ export default {
         } else {
           return false;
         }
-      } // Sinon (mode = login) : si les champs ne sont pas vides on retourne true, sinon on retourne false. 
+      } // Si non (mode = login) : si les champs ne sont pas vides on retourne true, sinon on retourne false. 
       else {
         if (this.email != "" && this.password != "") {
           return true;
@@ -64,7 +65,7 @@ export default {
 
   },
   methods: {
-    // Fonctions pour changer de mode lorsqu'on clique sur le bouton "s'inscrire" ou "se connecter"
+    // Fonctions pour changer de mode lorsqu'on clique sur le bouton "s'inscrire" ou "se connecter".
     switchToSignup: function() {
       this.mode = 'signup';
     },
@@ -104,6 +105,17 @@ export default {
 </script>
 
 <style scoped lang="scss">
+@mixin mobile {
+    @media screen and (max-width: 767px){
+        @content;
+    }   
+}
+
+@mixin tablet {
+    @media screen and (max-width: 992px){
+        @content;
+    }
+}
 
 .login {
   display: flex;
@@ -114,12 +126,13 @@ export default {
 }
 
 #logo {
+  max-width: 80%;
   width: 400px;
-  padding-bottom: 80px;
+  padding-bottom: 20px;
 }
 
 .card-log {
-  max-width: 100%;
+  max-width: 80%;
   width: 540px;
   background:white;
   border-radius: 10px;
@@ -151,6 +164,13 @@ export default {
     min-width: 100px;
     color: black;
     padding: 15px;
+  }
+}
+
+.form-row--name {
+  @include mobile() {
+    display: flex;
+    flex-direction: column;
   }
 }
 

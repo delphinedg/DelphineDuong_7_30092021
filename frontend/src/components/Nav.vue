@@ -7,9 +7,7 @@
             <router-link to="/posts">Fil d'actualité</router-link><span class="separator"> | </span>
             <router-link :to="{ name: 'Profile', params: { id: user.userId }}">Mon compte</router-link>
         </div>
-
           <button @click="logout()" class="btn btn--outlined">Déconnexion</button>
-  
     </div>
 </template>
 
@@ -79,5 +77,4 @@ export default {
 .separator {
   color: #000;
 }
-
 </style>
