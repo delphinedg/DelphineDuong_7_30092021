@@ -24,4 +24,4 @@ Pour faire fonctionner l'application Vue (frontend) :
 - allez dans le dossier "frontend" avec la commande `cd frontend`
 - installez les modules Node.js avec la commande `npm install`
 - lancez l'environnement de développement local avec la commande `npm run serve`
-- Vous pouvez ensuite vous rendre à l'adresse indiqué (généralement http://localhost:8080)
+- Vous pouvez ensuite vous rendre à l'adresse indiquée (généralement http://localhost:8080)
